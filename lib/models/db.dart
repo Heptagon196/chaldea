@@ -244,12 +244,12 @@ class _Database {
     return _saveWithBak(paths.userDataPath, userData, 'db.userdata');
   }
 
-  Future<void> saveSettings() {
+  Future<void> saveSettings({bool rethrowErrors = false}) {
     _settingsDirty = false;
-    return _saveWithBak(paths.settingsPath, settings, 'db.settings');
+    return _saveWithBak(paths.settingsPath, settings, 'db.settings', rethrowErrors: rethrowErrors);
   }
 
-  Future<void> _saveWithBak(String fp, Object obj, String task) async {
+  Future<void> _saveWithBak(String fp, Object obj, String task, {bool rethrowErrors = false}) async {
     final span = TaskObserver.start('$task.save');
     var failed = true;
     try {
@@ -264,6 +264,7 @@ class _Database {
         EasyLoading.showError(e.toString());
       }
       logger.e('saving file failed', e, s);
+      if (rethrowErrors) rethrow;
     } finally {
       span.finish(failed: failed);
     }
