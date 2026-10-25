@@ -24,6 +24,7 @@ import 'package:chaldea/widgets/widgets.dart';
 
 import '../generated/l10n.dart';
 import '../models/db.dart';
+import '../fgaa/appearance.dart';
 import '../packages/ads/ads.dart';
 import '../packages/language.dart';
 import '../packages/method_channel/method_channel_chaldea.dart';
@@ -35,7 +36,8 @@ import 'routes/parser.dart';
 import 'tools/app_window.dart';
 
 class Chaldea extends StatefulWidget {
-  Chaldea({super.key, this.embedded = false});
+  Chaldea({super.key, this.embedded = false, this.hostAppearance});
+  final HostAppearance? hostAppearance;
 
   /// The embedding app owns OS lifecycle, its window and binary updates.
   final bool embedded;
@@ -69,12 +71,14 @@ class _ChaldeaState extends State<Chaldea> with AfterLayoutMixin, WindowListener
   @override
   Widget build(BuildContext context) {
     final hostFont = widget.embedded ? Theme.of(context).textTheme.bodyMedium?.fontFamily : null;
-    ThemeData withHostFont(ThemeData theme) => hostFont == null ? theme : theme.copyWith(
-      textTheme: theme.textTheme.apply(fontFamily: hostFont),
-      primaryTextTheme: theme.primaryTextTheme.apply(fontFamily: hostFont),
-    );
-    final lightTheme = withHostFont(AppTheme.light());
-    final darkTheme = withHostFont(AppTheme.dark());
+    ThemeData withHostFont(ThemeData theme) => hostFont == null
+        ? theme
+        : theme.copyWith(
+            textTheme: theme.textTheme.apply(fontFamily: hostFont),
+            primaryTextTheme: theme.primaryTextTheme.apply(fontFamily: hostFont),
+          );
+    final lightTheme = widget.hostAppearance?.apply(withHostFont(AppTheme.light())) ?? withHostFont(AppTheme.light());
+    final darkTheme = widget.hostAppearance?.apply(withHostFont(AppTheme.dark())) ?? withHostFont(AppTheme.dark());
     Widget child = Screenshot(
       controller: db.runtimeData.screenshotController,
       child: MaterialApp.router(
@@ -86,7 +90,11 @@ class _ChaldeaState extends State<Chaldea> with AfterLayoutMixin, WindowListener
         debugShowCheckedModeBanner: false,
         theme: lightTheme,
         darkTheme: darkTheme,
-        themeMode: db.settings.themeMode,
+        themeMode: widget.hostAppearance == null
+            ? db.settings.themeMode
+            : widget.hostAppearance!.dark
+            ? ThemeMode.dark
+            : ThemeMode.light,
         scrollBehavior: DraggableScrollBehavior(enableMouse: db.settings.display.enableMouseDrag),
         locale: Language.getLanguage(db.settings.language)?.locale,
         localizationsDelegates: const [S.delegate, ...GlobalMaterialLocalizations.delegates],
