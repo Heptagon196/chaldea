@@ -24,6 +24,24 @@ import 'utils/catcher/server_feedback_handler.dart';
 import 'utils/http_override.dart';
 import 'utils/notification.dart';
 import 'utils/utils.dart';
+import 'models/userdata/version.dart';
+import 'packages/app_info.dart';
+
+Future<void>? _hostInitialization;
+
+/// Initializes data/services once without taking ownership of the host window.
+/// The host must expose Chaldea's original res/ assets and own app lifecycle.
+Future<void> initializeChaldeaForHost({required String storagePath}) {
+  return _hostInitialization ??= _initializeForHost(storagePath);
+}
+
+Future<void> _initializeForHost(String storagePath) async {
+  WidgetsFlutterBinding.ensureInitialized();
+  db.paths.hostRootPath = storagePath;
+  AppInfo.moduleVersion = AppVersion.tryParse('2.6.2+992');
+  await _initiateCommon(embedded: true);
+  await db.initiate();
+}
 
 void main() async {
   // make sure flutter packages like path_provider is working now
@@ -75,8 +93,8 @@ void main() async {
   }
 }
 
-Future<void> _initiateCommon() async {
-  await AppWindowUtil.init();
+Future<void> _initiateCommon({bool embedded = false}) async {
+  if (!embedded) await AppWindowUtil.init();
 
   LicenseRegistry.addLicense(() async* {
     Map<String, String> licenses = {
@@ -99,5 +117,5 @@ Future<void> _initiateCommon() async {
   SplitRoute.defaultMasterFillPageBuilder = (context) => const BlankPage();
   await LocalNotificationUtil.init();
 
-  HomeWidgetX.init();
+  if (!embedded) HomeWidgetX.init();
 }

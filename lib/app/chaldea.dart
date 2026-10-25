@@ -35,7 +35,10 @@ import 'routes/parser.dart';
 import 'tools/app_window.dart';
 
 class Chaldea extends StatefulWidget {
-  Chaldea({super.key});
+  Chaldea({super.key, this.embedded = false});
+
+  /// The embedding app owns OS lifecycle, its window and binary updates.
+  final bool embedded;
 
   @override
   _ChaldeaState createState() => _ChaldeaState();
@@ -65,8 +68,13 @@ class _ChaldeaState extends State<Chaldea> with AfterLayoutMixin, WindowListener
 
   @override
   Widget build(BuildContext context) {
-    final lightTheme = AppTheme.light();
-    final darkTheme = AppTheme.dark();
+    final hostFont = widget.embedded ? Theme.of(context).textTheme.bodyMedium?.fontFamily : null;
+    ThemeData withHostFont(ThemeData theme) => hostFont == null ? theme : theme.copyWith(
+      textTheme: theme.textTheme.apply(fontFamily: hostFont),
+      primaryTextTheme: theme.primaryTextTheme.apply(fontFamily: hostFont),
+    );
+    final lightTheme = withHostFont(AppTheme.light());
+    final darkTheme = withHostFont(AppTheme.dark());
     Widget child = Screenshot(
       controller: db.runtimeData.screenshotController,
       child: MaterialApp.router(
@@ -132,6 +140,7 @@ class _ChaldeaState extends State<Chaldea> with AfterLayoutMixin, WindowListener
       Intl.defaultLocale = Language.current.code;
     }
 
+    if (widget.embedded) return;
     SystemChannels.lifecycle.setMessageHandler((msg) async {
       // debugPrint('SystemChannels> $msg');
       if (msg == AppLifecycleState.resumed.toString()) {
@@ -158,6 +167,7 @@ class _ChaldeaState extends State<Chaldea> with AfterLayoutMixin, WindowListener
 
   @override
   void afterFirstLayout(BuildContext context) async {
+    if (widget.embedded) return;
     AppWindowUtil.setAlwaysOnTop();
     if (PlatformU.isWindows) {
       MethodChannelChaldea.setWindowPos();
@@ -308,7 +318,7 @@ class _ChaldeaState extends State<Chaldea> with AfterLayoutMixin, WindowListener
 
   @override
   void dispose() {
-    windowManager.removeListener(this);
+    if (!widget.embedded) windowManager.removeListener(this);
     super.dispose();
   }
 

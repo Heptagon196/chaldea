@@ -20,6 +20,7 @@ class AppInfo {
   AppInfo._();
 
   static PackageInfo? _packageInfo;
+  static AppVersion? moduleVersion;
   static String? _uuid;
   static bool _debugOn = false;
   static MacAppType _macAppType = MacAppType.unknown;
@@ -211,7 +212,7 @@ class AppInfo {
     }
   }
 
-  static AppVersion get version => AppVersion.tryParse(fullVersion)!;
+  static AppVersion get version => moduleVersion ?? AppVersion.tryParse(fullVersion)!;
 
   static const String commitHash = kCommitHash;
 

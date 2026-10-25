@@ -14,6 +14,8 @@ import '../packages/platform/platform.dart';
 import '../utils/constants.dart';
 
 class PathManager {
+  /// Set by an embedding application before initialization.
+  String? hostRootPath;
   /// [_appPath] root path where app data stored, can be configured by user
   String? _appPath;
 
@@ -68,7 +70,9 @@ class PathManager {
       return;
     }
 
-    if (PlatformU.isAndroid) {
+    if (hostRootPath != null) {
+      _persistentPath = _appPath = hostRootPath;
+    } else if (PlatformU.isAndroid) {
       // enhancement: startup check, if SD card not exists and set to use external, raise a warning
       _persistentPath = (await getApplicationDocumentsDirectory()).path;
       final sp = await SharedPreferences.getInstance();
