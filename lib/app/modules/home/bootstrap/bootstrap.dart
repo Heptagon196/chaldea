@@ -13,6 +13,7 @@ import 'package:chaldea/app/modules/home/bootstrap/startup_load_page.dart';
 import 'package:chaldea/app/modules/home/subpage/network_settings.dart';
 import 'package:chaldea/app/tools/gamedata_loader.dart';
 import 'package:chaldea/generated/l10n.dart';
+import 'package:chaldea/fgaa/host_scope.dart';
 import 'package:chaldea/models/models.dart';
 import 'package:chaldea/packages/app_info.dart';
 import 'package:chaldea/packages/language.dart';
@@ -90,8 +91,16 @@ class _BootstrapPageState extends State<BootstrapPage> with SingleTickerProvider
         ),
       );
     }
+    final embedded = HostScope.isEmbedded(context);
     pages = db.settings.tips.starter
-        ? [welcomePage, languagePage, if (kIsWeb) webDomainPage, darkModePage, createAccountPage, dataPage]
+        ? [
+            welcomePage,
+            languagePage,
+            if (kIsWeb && !embedded) webDomainPage,
+            if (!embedded) darkModePage,
+            createAccountPage,
+            dataPage,
+          ]
         : [dataPage];
 
     Widget child = PageView(

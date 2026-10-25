@@ -25,6 +25,7 @@ import 'package:chaldea/widgets/widgets.dart';
 import '../generated/l10n.dart';
 import '../models/db.dart';
 import '../fgaa/appearance.dart';
+import '../fgaa/host_scope.dart';
 import '../packages/ads/ads.dart';
 import '../packages/language.dart';
 import '../packages/method_channel/method_channel_chaldea.dart';
@@ -126,7 +127,7 @@ class _ChaldeaState extends State<Chaldea> with AfterLayoutMixin, WindowListener
         child: child,
       );
     }
-    return child;
+    return HostScope(embedded: widget.embedded, child: child);
   }
 
   void onAppUpdate() {
